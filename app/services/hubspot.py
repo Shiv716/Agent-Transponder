@@ -238,7 +238,7 @@ class HubSpotClient:
     
     def get_company_url(self, company_id: str) -> str:
         """Generate HubSpot company record URL."""
-        return f"https://app.hubspot.com/contacts/company/{company_id}"
+        return f"https://app.hubspot.com/contacts/148137078/company/{company_id}"
 
 
 # Default client instance
