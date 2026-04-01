@@ -109,4 +109,4 @@ The dashboard calls the Railway API directly via CORS-enabled endpoints.
 
 ## License
 
-MIT
+[MIT](LICENSE)
