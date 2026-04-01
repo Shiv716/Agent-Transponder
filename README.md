@@ -192,7 +192,7 @@ This structured data drives the HubSpot update and email content.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+[MIT](LICENSE)
 
 ---
 
