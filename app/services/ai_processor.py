@@ -97,7 +97,7 @@ async def extract_meeting_data(
     }
     
     payload = {
-        "model": settings.openai_api_key,
+        "model": settings.openai_model,
         "messages": [
             {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": user_content},
