@@ -4,7 +4,7 @@ Demo data and test endpoints for development.
 Allows testing the full pipeline without a real Fathom webhook.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Demo payload matching Fathom webhook schema
 DEMO_FATHOM_PAYLOAD = {
@@ -149,7 +149,7 @@ def get_demo_payload() -> dict:
     """Get demo payload with fresh timestamps."""
     payload = DEMO_FATHOM_PAYLOAD.copy()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload["created_at"] = (now - timedelta(hours=1)).isoformat() + "Z"
     payload["scheduled_start_time"] = (now - timedelta(hours=1)).isoformat() + "Z"
     payload["scheduled_end_time"] = (now - timedelta(minutes=30)).isoformat() + "Z"
