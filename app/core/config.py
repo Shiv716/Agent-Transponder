@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     hubspot_access_token: str
     
     # Groq (LLM)
-    groq_api_key: str
-    groq_model: str = "llama-3.1-70b-versatile"
+    # groq_api_key: str
+    # groq_model: str = "llama-3.1-70b-versatile"
 
     # OpenAI (LLM)
     openai_api_key: str
