@@ -1,4 +1,4 @@
-So # Agent Transponder
+# Agent Transponder
 
 **Automated meeting-to-CRM pipeline with AI-powered follow-up notes.**
 
