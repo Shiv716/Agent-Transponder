@@ -3,7 +3,7 @@ Pydantic models for API request/response validation.
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, Field
 from uuid import UUID
 
@@ -12,27 +12,59 @@ from uuid import UUID
 # Fathom Webhook Schemas
 # ============================================================================
 
+# class FathomWebhookPayload(BaseModel):
+#     """Incoming Fathom webhook payload."""
+#
+#     recording_id: int = Field(..., description="Fathom recording ID")
+#     url: str = Field(..., description="Fathom recording URL")
+#     share_url: Optional[str] = Field(None, description="Shareable URL")
+#     type: str = Field(..., description="Event type (meeting_content_ready)")
+#
+#     # Meeting metadata
+#     title: Optional[str] = Field(None, description="Meeting title")
+#     created_at: Optional[str] = Field(None)
+#     scheduled_start_time: Optional[str] = Field(None)
+#     scheduled_end_time: Optional[str] = Field(None)
+#     recording_start_time: Optional[str] = Field(None)
+#     recording_end_time: Optional[str] = Field(None)
+#
+#     # Content (when include_* flags are set on webhook)
+#     transcript: Optional[str] = Field(None, description="Full transcript text")
+#     summary: Optional[dict] = Field(None, description="AI summary object")
+#     action_items: Optional[List[dict]] = Field(None, description="Action items list")
+#
+#     class Config:
+#         extra = "allow"  # Allow additional fields from Fathom
+
 class FathomWebhookPayload(BaseModel):
     """Incoming Fathom webhook payload."""
-    
+
     recording_id: int = Field(..., description="Fathom recording ID")
     url: str = Field(..., description="Fathom recording URL")
     share_url: Optional[str] = Field(None, description="Shareable URL")
     type: str = Field(..., description="Event type (meeting_content_ready)")
-    
+
     # Meeting metadata
     title: Optional[str] = Field(None, description="Meeting title")
+    meeting_title: Optional[str] = Field(None, description="Meeting title (alternate)")
     created_at: Optional[str] = Field(None)
     scheduled_start_time: Optional[str] = Field(None)
     scheduled_end_time: Optional[str] = Field(None)
     recording_start_time: Optional[str] = Field(None)
     recording_end_time: Optional[str] = Field(None)
-    
+    calendar_invitees_domains_type: Optional[str] = Field(None)
+
     # Content (when include_* flags are set on webhook)
-    transcript: Optional[str] = Field(None, description="Full transcript text")
-    summary: Optional[dict] = Field(None, description="AI summary object")
+    transcript: Optional[Union[str, List[dict]]] = Field(None, description="Transcript (string or array)")
+    default_summary: Optional[dict] = Field(None, description="AI summary object")
+    summary: Optional[dict] = Field(None, description="AI summary object (alternate)")
     action_items: Optional[List[dict]] = Field(None, description="Action items list")
-    
+
+    # Participants
+    calendar_invitees: Optional[List[dict]] = Field(None, description="Meeting invitees")
+    recorded_by: Optional[dict] = Field(None, description="Who recorded the meeting")
+    crm_matches: Optional[dict] = Field(None, description="CRM company matches")
+
     class Config:
         extra = "allow"  # Allow additional fields from Fathom
 

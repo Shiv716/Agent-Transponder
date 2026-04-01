@@ -19,6 +19,7 @@ from app.models.schemas import FathomWebhookPayload, WebhookResponse
 from app.services.ai_processor import extract_meeting_data
 from app.services.hubspot import get_hubspot_client
 from app.services.email import send_meeting_followup
+from app.demo_data import get_demo_payload, get_transcript_text
 
 logger = logging.getLogger(__name__)
 
@@ -91,19 +92,61 @@ async def process_fathom_webhook(
     
     logger.info(f"Processing Fathom webhook for recording: {payload.recording_id}")
     
+    # try:
+    #     # Get transcript content
+    #     transcript = payload.transcript or ""
+    #
+    #     # Get summary content
+    #     summary_text = None
+    #     if payload.summary:
+    #         summary_text = (
+    #             payload.summary.get("markdown_formatted")
+    #             or payload.summary.get("plain_text")
+    #             or str(payload.summary)
+    #         )
+    #
+    #     # Get action items
+    #     action_items_list = []
+    #     if payload.action_items:
+    #         action_items_list = [
+    #             item.get("text", str(item)) if isinstance(item, dict) else str(item)
+    #             for item in payload.action_items
+    #         ]
+    #
+    #     # If no transcript, use summary as fallback
+    #     if not transcript and summary_text:
+    #         transcript = summary_text
+    #
+    #     if not transcript:
+    #         logger.warning(f"No transcript or summary for recording {payload.recording_id}")
+    #         transcript = f"Meeting: {payload.title or 'Untitled'}"
+    #
+    #     # 1. Extract meeting data with AI
+    #     extracted = await extract_meeting_data(
+    #         transcript=transcript,
+    #         summary=summary_text,
+    #         action_items=action_items_list,
+    #         meeting_title=payload.title,
+    #     )
     try:
-        # Get transcript content
-        transcript = payload.transcript or ""
-        
-        # Get summary content
+        # Get transcript content (handle both string and array formats)
+        transcript = ""
+        if payload.transcript:
+            if isinstance(payload.transcript, list):
+                transcript = get_transcript_text(payload.transcript)
+            else:
+                transcript = payload.transcript
+
+        # Get summary content (check both default_summary and summary)
         summary_text = None
-        if payload.summary:
+        summary_obj = payload.default_summary or payload.summary
+        if summary_obj:
             summary_text = (
-                payload.summary.get("markdown_formatted") 
-                or payload.summary.get("plain_text")
-                or str(payload.summary)
+                    summary_obj.get("markdown_formatted")
+                    or summary_obj.get("plain_text")
+                    or str(summary_obj)
             )
-        
+
         # Get action items
         action_items_list = []
         if payload.action_items:
@@ -111,21 +154,24 @@ async def process_fathom_webhook(
                 item.get("text", str(item)) if isinstance(item, dict) else str(item)
                 for item in payload.action_items
             ]
-        
+
+        # Get meeting title (check both fields)
+        meeting_title = payload.title or payload.meeting_title or "Untitled Meeting"
+
         # If no transcript, use summary as fallback
         if not transcript and summary_text:
             transcript = summary_text
-        
+
         if not transcript:
             logger.warning(f"No transcript or summary for recording {payload.recording_id}")
-            transcript = f"Meeting: {payload.title or 'Untitled'}"
-        
+            transcript = f"Meeting: {meeting_title}"
+
         # 1. Extract meeting data with AI
         extracted = await extract_meeting_data(
             transcript=transcript,
             summary=summary_text,
             action_items=action_items_list,
-            meeting_title=payload.title,
+            meeting_title=meeting_title,
         )
         
         logger.info(f"Extracted data - Company: {extracted.company_name}, Domain: {extracted.company_domain}")
@@ -259,3 +305,35 @@ async def fathom_webhook(
         status="accepted",
         message="Webhook received, processing in background",
     )
+
+
+@router.post("/test", response_model=WebhookResponse)
+async def test_webhook(
+        background_tasks: BackgroundTasks,
+        db: AsyncSession = Depends(get_db),
+):
+    """
+    Test endpoint that simulates a Fathom webhook with demo data.
+    """
+    payload_dict = get_demo_payload()
+
+    if isinstance(payload_dict.get("transcript"), list):
+        payload_dict["transcript"] = get_transcript_text(payload_dict["transcript"])
+
+    payload = FathomWebhookPayload(**payload_dict)
+
+    logger.info(f"Test webhook triggered with recording_id: {payload.recording_id}")
+
+    background_tasks.add_task(process_fathom_webhook, payload, db)
+
+    return WebhookResponse(
+        status="accepted",
+        message="Test webhook triggered, processing demo data in background",
+        meeting_id=str(payload.recording_id),
+    )
+
+
+@router.get("/test/payload")
+async def get_test_payload():
+    """View the demo payload structure."""
+    return get_demo_payload()
