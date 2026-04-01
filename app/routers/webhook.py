@@ -6,7 +6,7 @@ import hashlib
 import hmac
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Request, HTTPException, Depends, BackgroundTasks
@@ -25,6 +25,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhook", tags=["webhooks"])
 
+def parse_datetime(dt_string: str) -> datetime:
+    """Parse datetime string, handling various formats."""
+    # Remove duplicate timezone suffixes
+    clean = dt_string.replace("Z", "+00:00")
+    if clean.endswith("+00:00+00:00"):
+        clean = clean[:-6]
+    return datetime.fromisoformat(clean)
 
 def verify_fathom_signature(
     payload_body: bytes,
@@ -242,7 +249,7 @@ async def process_fathom_webhook(
             hubspot_note_id=hubspot_note_id,
             email_sent_at=email_sent_at,
             email_recipient=settings.user_email,
-            meeting_date=datetime.fromisoformat(payload.scheduled_start_time.replace("Z", "+00:00")) if payload.scheduled_start_time else datetime.utcnow(),
+            meeting_date=parse_datetime(payload.scheduled_start_time) if payload.scheduled_start_time else datetime.now(timezone.utc),
         )
         
         db.add(meeting)
