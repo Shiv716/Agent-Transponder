@@ -20,6 +20,9 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 # OpenAI API endpoint
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
+# Anthropic API endpoint
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+
 # System prompt for CRM extraction
 EXTRACTION_PROMPT = """You are an AI assistant that extracts CRM-relevant information from meeting transcripts.
 
@@ -89,41 +92,75 @@ async def extract_meeting_data(
     context_parts.append(f"Full Transcript:\n{transcript}")
     
     user_content = "\n\n---\n\n".join(context_parts)
-    
-    # Call Groq API
+    #
+    # # Call Groq API
+    # headers = {
+    #     "Authorization": f"Bearer {settings.anthropic_api_key}",
+    #     "Content-Type": "application/json",
+    # }
+    #
+    # payload = {
+    #     "model": settings.anthropic_api_model,
+    #     "messages": [
+    #         {"role": "system", "content": EXTRACTION_PROMPT},
+    #         {"role": "user", "content": user_content},
+    #     ],
+    #     "temperature": 0.1,  # Low temp for consistent extraction
+    #     "max_tokens": 1000,
+    #     "response_format": {"type": "json_object"},
+    # }
+    #
+    # try:
+    #     async with httpx.AsyncClient(timeout=30.0) as client:
+    #         response = await client.post(ANTHROPIC_API_URL, headers=headers, json=payload)
+    #         response.raise_for_status()
+    #
+    #         result = response.json()
+    #         content = result["choices"][0]["message"]["content"]
+    #
+    #         # Parse JSON response
+    #         extracted = json.loads(content)
+    #
+    #         logger.info(f"Successfully extracted meeting data: {extracted.get('company_name', 'Unknown')}")
+    #
+    #         return ExtractedMeetingData(**extracted)
+    #
+    # except httpx.HTTPStatusError as e:
+    #     logger.error(f"Claude API error: {e.response.status_code} - {e.response.text}")
+    #     raise
+    # Call Anthropic API
     headers = {
-        "Authorization": f"Bearer {settings.openai_api_key}",
+        "x-api-key": settings.anthropic_api_key,
         "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
     }
-    
+
     payload = {
-        "model": settings.openai_model,
+        "model": settings.anthropic_model,
+        "max_tokens": 1000,
+        "system": EXTRACTION_PROMPT,
         "messages": [
-            {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": user_content},
         ],
-        "temperature": 0.1,  # Low temp for consistent extraction
-        "max_tokens": 1000,
-        "response_format": {"type": "json_object"},
     }
-    
+
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(OPENAI_API_URL, headers=headers, json=payload)
+            response = await client.post(ANTHROPIC_API_URL, headers=headers, json=payload)
             response.raise_for_status()
-            
+
             result = response.json()
-            content = result["choices"][0]["message"]["content"]
-            
+            content = result["content"][0]["text"]
+
             # Parse JSON response
             extracted = json.loads(content)
-            
+
             logger.info(f"Successfully extracted meeting data: {extracted.get('company_name', 'Unknown')}")
-            
+
             return ExtractedMeetingData(**extracted)
-            
+
     except httpx.HTTPStatusError as e:
-        logger.error(f"OPENAI API error: {e.response.status_code} - {e.response.text}")
+        logger.error(f"Anthropic API error: {e.response.status_code} - {e.response.text}")
         raise
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse OPENAI response as JSON: {e}")

@@ -30,8 +30,13 @@ class Settings(BaseSettings):
     # groq_model: str = "llama-3.1-70b-versatile"
 
     # OpenAI (LLM)
-    openai_api_key: str
-    openai_model: str = "gpt-4"
+    # openai_api_key: str
+    # openai_model: str = "gpt-4"
+
+
+    # Anthropic (LLM)
+    anthropic_api_key: str
+    anthropic_model: str = "claude-sonnet-4-20250514"
     
     # Resend (Email)
     resend_api_key: str
