@@ -249,7 +249,8 @@ async def process_fathom_webhook(
             hubspot_note_id=hubspot_note_id,
             email_sent_at=email_sent_at,
             email_recipient=settings.user_email,
-            meeting_date=parse_datetime(payload.scheduled_start_time) if payload.scheduled_start_time else datetime.now(timezone.utc),
+            meeting_date=datetime.fromisoformat(payload.scheduled_start_time.replace("Z", "+00:00").rstrip(
+                "+00:00") + "+00:00") if payload.scheduled_start_time else datetime.now(timezone.utc),
         )
         
         db.add(meeting)
