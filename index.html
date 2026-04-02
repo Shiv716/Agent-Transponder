@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Transponder | Automated Meeting Intelligence</title>
+    <link rel="icon" type="image/jpeg" href="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gIcSUNDX1BST0ZJTEUAAQEAAAIMbGNtcwIQAABtbnRyUkdCIFhZWiAH3AABABkAAwApADlhY3NwQVBQTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWxjbXMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApkZXNjAAAA/AAAAF5jcHJ0AAABXAAAAAt3dHB0AAABaAAAABRia3B0AAABfAAAABRyWFlaAAABkAAAABRnWFlaAAABpAAAABRiWFlaAAABuAAAABRyVFJDAAABzAAAAEBnVFJDAAABzAAAAEBiVFJDAAABzAAAAEBkZXNjAAAAAAAAAANjMgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0teleXh0AAAAAEZCAABYWVogAAAAAAAA9tYAAQAAAADTLVhZWiAAAAAAAAADFgAAAzMAAAKkWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPY3VydgAAAAAAAAAaAAAAywHJA2MFkghrC/YQPxVRGzQh8SmQMhg7kkYFUXdd7WtwegWJsZp8rGm/fdPD6TD////" />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -349,6 +350,110 @@
             height: 6px;
             background: var(--accent);
             border-radius: 50%;
+        }
+
+        /* Status indicator styles */
+        .status-operational {
+            color: #22c55e;
+            font-size: 0.8125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .status-operational .status-indicator {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        .status-processing {
+            color: var(--accent);
+            font-size: 0.8125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .status-processing .status-indicator {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Queue table */
+        .queue-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .queue-header {
+            display: grid;
+            grid-template-columns: 1fr 150px 100px 80px;
+            padding: 0.625rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .queue-row {
+            display: grid;
+            grid-template-columns: 1fr 150px 100px 80px;
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8125rem;
+            align-items: center;
+            transition: background 0.1s;
+        }
+
+        .queue-row:last-child {
+            border-bottom: none;
+        }
+
+        .queue-row:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .queue-recording {
+            font-weight: 500;
+        }
+
+        .queue-company {
+            color: var(--text-secondary);
+        }
+
+        .queue-duration {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
         }
 
         /* Activity table */
@@ -839,9 +944,6 @@
         <div id="dashboard" class="page">
             <div class="section-header">
                 <h2>Activity</h2>
-                <button class="btn btn-primary" onclick="triggerTest()">
-                    Run Test
-                </button>
             </div>
 
             <div class="stats-grid">
@@ -859,7 +961,10 @@
                 </div>
                 <div class="stat">
                     <div class="stat-label">Status</div>
-                    <div class="stat-value online">Operational</div>
+                    <div class="stat-value status-operational" id="system-status">
+                        <span class="status-indicator"></span>
+                        <span id="status-text">Operational</span>
+                    </div>
                 </div>
             </div>
 
@@ -873,6 +978,27 @@
                 <div id="activity-list">
                     <div class="empty-state">
                         No activity recorded. Connect your integrations to begin.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Section -->
+            <div class="section-header" style="margin-top: 2rem;">
+                <h2>Processing Queue</h2>
+            </div>
+            <div class="queue-table">
+                <div class="queue-header">
+                    <div>Recording</div>
+                    <div>Company</div>
+                    <div>Duration</div>
+                    <div>Action</div>
+                </div>
+                <div id="queue-list">
+                    <div class="queue-row">
+                        <div class="queue-recording">Q2 Partnership Discussion</div>
+                        <div class="queue-company">Acme Corp</div>
+                        <div class="queue-duration">32 min</div>
+                        <div><button class="btn btn-primary btn-sm" onclick="runQueueItem(this)">Run</button></div>
                     </div>
                 </div>
             </div>
@@ -937,16 +1063,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="test-section">
-                <div class="test-section-text">
-                    <h3>Test Your Configuration</h3>
-                    <p>Run a test webhook to verify the pipeline is working correctly.</p>
-                </div>
-                <button class="btn btn-secondary" onclick="triggerTest()">
-                    Run Test Webhook
-                </button>
-            </div>
         </div>
     </div>
 
@@ -984,6 +1100,7 @@
         // State
         let stats = { meetings: 0, notes: 0, emails: 0 };
         let connections = { fathom: false, hubspot: false };
+        let isProcessing = false;
 
         // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -1007,6 +1124,22 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        // Status indicator
+        function setStatus(status) {
+            const statusEl = document.getElementById('system-status');
+            const statusText = document.getElementById('status-text');
+            
+            if (status === 'processing') {
+                statusEl.className = 'stat-value status-processing';
+                statusText.textContent = 'Processing';
+                isProcessing = true;
+            } else {
+                statusEl.className = 'stat-value status-operational';
+                statusText.textContent = 'Operational';
+                isProcessing = false;
+            }
+        }
+
         // Modal
         function openConnectModal(service) {
             const modal = document.getElementById('modal-overlay');
@@ -1014,6 +1147,10 @@
             const serviceName = document.getElementById('modal-service-name');
             const loading = document.getElementById('modal-loading');
             const success = document.getElementById('modal-success');
+            const successMsg = document.getElementById('modal-success-message');
+
+            // First show "Already signed up" toast
+            showToast('Already signed up - connecting...');
 
             title.textContent = `Connect ${service.charAt(0).toUpperCase() + service.slice(1)}`;
             serviceName.textContent = service.charAt(0).toUpperCase() + service.slice(1);
@@ -1027,6 +1164,7 @@
             setTimeout(() => {
                 loading.style.display = 'none';
                 success.style.display = 'flex';
+                successMsg.textContent = 'Your integration is now active.';
                 
                 // Update UI
                 connections[service] = true;
@@ -1062,9 +1200,19 @@
             }
         }
 
-        // Test webhook - calls actual Railway endpoint
-        async function triggerTest() {
-            showToast('Running test webhook...');
+        // Run queue item - calls actual Railway endpoint
+        async function runQueueItem(btn) {
+            if (isProcessing) {
+                showToast('Already processing...');
+                return;
+            }
+
+            const row = btn.closest('.queue-row');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            
+            setStatus('processing');
+            showToast('Processing meeting transcript...');
 
             try {
                 const response = await fetch('https://agent-transponder-production.up.railway.app/webhook/test', {
@@ -1090,13 +1238,25 @@
                         status: 'success'
                     });
 
-                    showToast('Test completed successfully');
+                    // Remove from queue
+                    row.style.opacity = '0.5';
+                    btn.textContent = 'Done';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+
+                    showToast('Processing completed successfully');
                 } else {
-                    showToast('Test executed - check logs');
+                    showToast('Processing executed - check logs');
+                    btn.textContent = 'Run';
+                    btn.disabled = false;
                 }
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Connection failed');
+                btn.textContent = 'Run';
+                btn.disabled = false;
+            } finally {
+                setStatus('operational');
             }
         }
 
