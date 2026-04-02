@@ -18,13 +18,11 @@ Fathom webhook → Claude AI extraction → HubSpot note → Email digest
 
 ## The problem
 
-Sales and customer success teams spend hours after meetings manually:
-- Reviewing recordings and transcripts
-- Writing up meeting summaries
-- Logging notes in the CRM
-- Tracking action items and follow-ups
+Sales professionals, account managers, and customer success teams spend 15–30 minutes after every meeting manually reviewing recordings, writing summaries, logging notes in their CRM, and tracking action items. Across an organisation with hundreds of calls per week, this administrative burden compounds into thousands of hours lost annually.
 
-This creates lag between the meeting and the CRM update, leading to stale data and missed follow-ups.
+**Meetings end. Notes appear. No effort required.**
+
+Agent Transponder eliminates the gap between conversation and documentation, transforming every recorded call into structured CRM data and actionable follow-ups, autonomously.
 
 ---
 
