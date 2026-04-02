@@ -43,7 +43,7 @@ Agent Transponder automatically processes your video call recordings, extracts a
 | AI | Claude API / Groq API (Llama 3.1 70B) | Transcript processing, note extraction |
 | CRM | HubSpot API                           | Company search, note creation |
 | Email | Resend                                | Follow-up email delivery |
-| Hosting | Render                                | Web service deployment |
+| Hosting | Railway / Render                      | Web service deployment |
 
 ---
 
@@ -53,7 +53,7 @@ Agent Transponder automatically processes your video call recordings, extracts a
 
 - Python 3.11+
 - PostgreSQL database (Neon free tier works)
-- API keys for: Fathom, HubSpot, Groq, Resend
+- API keys for: Fathom, HubSpot, Claude / Groq, Resend
 
 ### 1. Clone and Install
 
@@ -144,6 +144,7 @@ agent-transponder/
 ├── .env.example             # Environment template
 ├── requirements.txt         # Python dependencies
 ├── render.yaml              # Render deployment config
+├── CONTRIBUTING.md 
 └── README.md
 ```
 
@@ -168,7 +169,7 @@ The included `render.yaml` handles build and start commands automatically.
 
 ## How AI Processing Works
 
-The Groq LLM receives the meeting transcript and extracts:
+The  LLM receives the meeting transcript and extracts:
 
 ```json
 {
