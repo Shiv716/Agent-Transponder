@@ -13,7 +13,7 @@ Agent Transponder automatically processes your video call recordings, extracts a
 │   Fathom     │────▶│  Fathom CRM      │────▶│  HubSpot    │────▶│   Email     │
 │  (Meeting)   │     │  Agent (AI)      │     │  (CRM Note) │     │  (Summary)  │
 └──────────────┘     └──────────────────┘     └─────────────┘     └─────────────┘
-     Webhook              Groq LLM              REST API           Resend API
+     Webhook              Claude/Groq LLM              REST API           Resend API
 ```
 
 1. **You finish a meeting** recorded by Fathom
@@ -27,7 +27,7 @@ Agent Transponder automatically processes your video call recordings, extracts a
 ## Features
 
 - **Zero manual data entry** — meetings automatically sync to your CRM
-- **AI-powered extraction** — Groq (Llama 3.1 70B) identifies key information
+- **AI-powered extraction** — Claude (claude-sonnet-4-20250514) identifies key information
 - **Smart company matching** — finds the right HubSpot company by domain or name
 - **Professional email summaries** — formatted follow-up notes delivered to your inbox
 - **Audit trail** — all processed meetings logged in PostgreSQL
@@ -36,14 +36,14 @@ Agent Transponder automatically processes your video call recordings, extracts a
 
 ## Tech Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Backend | FastAPI (Python 3.11+) | Webhook handling, API routing |
-| Database | PostgreSQL (Neon) | User accounts, credentials, meeting logs |
-| AI | Groq API (Llama 3.1 70B) | Transcript processing, note extraction |
-| CRM | HubSpot API | Company search, note creation |
-| Email | Resend | Follow-up email delivery |
-| Hosting | Render | Web service deployment |
+| Component | Technology                            | Purpose |
+|-----------|---------------------------------------|---------|
+| Backend | FastAPI (Python 3.11+)                | Webhook handling, API routing |
+| Database | PostgreSQL (Neon)                     | User accounts, credentials, meeting logs |
+| AI | Claude API / Groq API (Llama 3.1 70B) | Transcript processing, note extraction |
+| CRM | HubSpot API                           | Company search, note creation |
+| Email | Resend                                | Follow-up email delivery |
+| Hosting | Render                                | Web service deployment |
 
 ---
 
@@ -58,7 +58,7 @@ Agent Transponder automatically processes your video call recordings, extracts a
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/yourusername/agent-transponder.git
+git clone https://github.com/Shiv716/Agent-Transponder.git
 cd agent-transponder
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -95,15 +95,15 @@ https://your-domain.com/webhook/fathom
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `GROQ_API_KEY` | Groq API key for LLM processing | ✅ |
-| `HUBSPOT_ACCESS_TOKEN` | HubSpot private app access token | ✅ |
-| `RESEND_API_KEY` | Resend API key for emails | ✅ |
-| `FATHOM_WEBHOOK_SECRET` | Fathom webhook signing secret | ✅ |
-| `USER_EMAIL` | Email address for follow-up delivery | ✅ |
-| `APP_ENV` | `development` or `production` | ❌ |
+| Variable                | Description                          | Required |
+|-------------------------|--------------------------------------|----------|
+| `DATABASE_URL`          | PostgreSQL connection string         | ✅ |
+| `LLM_API_KEY`           | LLM API key for LLM processing       | ✅ |
+| `HUBSPOT_ACCESS_TOKEN`  | HubSpot private app access token     | ✅ |
+| `RESEND_API_KEY`        | Resend API key for emails            | ✅ |
+| `FATHOM_WEBHOOK_SECRET` | Fathom webhook signing secret        | ✅ |
+| `USER_EMAIL`            | Email address for follow-up delivery | ✅ |
+| `APP_ENV`               | `development` or `production`        | ❌ |
 
 ---
 
@@ -133,7 +133,7 @@ agent-transponder/
 │   │   ├── webhook.py       # Fathom webhook handler
 │   │   └── meetings.py      # Meeting history endpoints
 │   └── services/
-│       ├── ai_processor.py  # Groq LLM integration
+│       ├── ai_processor.py  # LLM integration
 │       ├── hubspot.py       # HubSpot API client
 │       └── email.py         # Resend email service
 ├── tests/
