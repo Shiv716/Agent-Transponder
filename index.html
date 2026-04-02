@@ -410,7 +410,7 @@
 
         .queue-header {
             display: grid;
-            grid-template-columns: 1fr 150px 100px 80px;
+            grid-template-columns: 1fr 150px 150px 80px;
             padding: 0.625rem 1rem;
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
@@ -423,7 +423,7 @@
 
         .queue-row {
             display: grid;
-            grid-template-columns: 1fr 150px 100px 80px;
+            grid-template-columns: 1fr 150px 150px 80px;
             padding: 0.875rem 1rem;
             border-bottom: 1px solid var(--border);
             font-size: 0.8125rem;
@@ -447,10 +447,15 @@
             color: var(--text-secondary);
         }
 
-        .queue-duration {
-            font-family: 'IBM Plex Mono', monospace;
+        .queue-error {
+            font-size: 0.75rem;
+            color: var(--error);
+        }
+
+        .queue-count {
             font-size: 0.75rem;
             color: var(--text-muted);
+            font-weight: 500;
         }
 
         .btn-sm {
@@ -954,8 +959,8 @@
                     <div class="stat-value" id="stat-meetings">0</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-label">Notes</div>
-                    <div class="stat-value" id="stat-notes">0</div>
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="stat-pending">3</div>
                 </div>
                 <div class="stat">
                     <div class="stat-label">Emails</div>
@@ -987,19 +992,32 @@
             <!-- Queue Section -->
             <div class="section-header" style="margin-top: 2rem;">
                 <h2>Processing Queue</h2>
+                <span class="queue-count" id="queue-count">3 pending</span>
             </div>
             <div class="queue-table">
                 <div class="queue-header">
                     <div>Recording</div>
                     <div>Company</div>
-                    <div>Duration</div>
+                    <div>Error</div>
                     <div>Action</div>
                 </div>
                 <div id="queue-list">
-                    <div class="queue-row">
+                    <div class="queue-row" data-id="1">
                         <div class="queue-recording">Q2 Partnership Discussion</div>
                         <div class="queue-company">Acme Corp</div>
-                        <div class="queue-duration">32 min</div>
+                        <div class="queue-error">HubSpot timeout</div>
+                        <div><button class="btn btn-primary btn-sm" onclick="runQueueItem(this)">Run</button></div>
+                    </div>
+                    <div class="queue-row" data-id="2">
+                        <div class="queue-recording">Product Demo Call</div>
+                        <div class="queue-company">TechStart Inc</div>
+                        <div class="queue-error">Rate limit exceeded</div>
+                        <div><button class="btn btn-primary btn-sm" onclick="runQueueItem(this)">Run</button></div>
+                    </div>
+                    <div class="queue-row" data-id="3">
+                        <div class="queue-recording">Onboarding Kickoff</div>
+                        <div class="queue-company">GlobalFin Ltd</div>
+                        <div class="queue-error">API connection failed</div>
                         <div><button class="btn btn-primary btn-sm" onclick="runQueueItem(this)">Run</button></div>
                     </div>
                 </div>
@@ -1100,7 +1118,7 @@
 
     <script>
         // State
-        let stats = { meetings: 0, notes: 0, emails: 0 };
+        let stats = { meetings: 0, pending: 3, emails: 0 };
         let connections = { fathom: false, hubspot: false };
         let isProcessing = false;
 
@@ -1140,6 +1158,12 @@
                 statusText.textContent = 'Operational';
                 isProcessing = false;
             }
+        }
+
+        // Update pending count
+        function updatePendingCount() {
+            document.getElementById('stat-pending').textContent = stats.pending;
+            document.getElementById('queue-count').textContent = stats.pending > 0 ? `${stats.pending} pending` : 'All clear';
         }
 
         // Modal
@@ -1227,6 +1251,9 @@
             }
 
             const row = btn.closest('.queue-row');
+            const meetingName = row.querySelector('.queue-recording').textContent;
+            const companyName = row.querySelector('.queue-company').textContent;
+            
             btn.disabled = true;
             btn.textContent = 'Running...';
             
@@ -1240,28 +1267,27 @@
 
                 if (response.ok) {
                     stats.meetings++;
-                    stats.notes++;
+                    stats.pending--;
                     stats.emails++;
                     updateStats();
+                    updatePendingCount();
 
                     // Update connection cards if shown
-                    const hubspotNotes = document.getElementById('hubspot-notes-count');
                     const fathomEvent = document.getElementById('fathom-last-event');
-                    if (hubspotNotes) hubspotNotes.textContent = stats.notes;
                     if (fathomEvent) fathomEvent.textContent = 'Just now';
 
                     addActivity({
-                        meeting: 'Q2 Partnership Discussion',
-                        company: 'Acme Corp',
+                        meeting: meetingName,
+                        company: companyName,
                         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
                         status: 'success'
                     });
 
-                    // Remove from queue
-                    row.style.opacity = '0.5';
-                    btn.textContent = 'Done';
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-secondary');
+                    // Remove from queue with animation
+                    row.style.transition = 'opacity 0.3s, transform 0.3s';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => row.remove(), 300);
 
                     showToast('Processing completed successfully');
                 } else {
@@ -1281,7 +1307,7 @@
 
         function updateStats() {
             document.getElementById('stat-meetings').textContent = stats.meetings;
-            document.getElementById('stat-notes').textContent = stats.notes;
+            document.getElementById('stat-pending').textContent = stats.pending;
             document.getElementById('stat-emails').textContent = stats.emails;
         }
 
